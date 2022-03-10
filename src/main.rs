@@ -7,7 +7,7 @@ use rdkafka::{
 use std::sync::mpsc::channel;
 use std::sync::mpsc::Receiver;
 use std::sync::mpsc::Sender;
-
+use serde_json::json;
 use log::debug;
 use log::error;
 use log::info;
@@ -216,5 +216,111 @@ impl ProducerContext for ProduceCallbackLogger {
                 )
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    // Note this useful idiom: importing names from outer (for mod tests) scope.
+    use super::*;
+
+    // #[tokio::test]
+    // async fn test_single_return() -> Result<(), Box<dyn std::error::Error>> {
+    //     let body = json!({
+    //         "query": "Professor",
+    //         "name": [],
+    //         "city": ["Xin’an"],
+    //         "country": ["China"],
+    //         "state": ["nework"],
+    //         "business_Sector": [],
+    //         "business_type": []
+    //     });
+
+    //     let data="[{\"id\":\"308\",\"organizationid\":\"b8957b97-c95c-4163-9f37-e2ae9059d0ac\",\"name\":\"Quaxo\",\"city\":\"Xin’an\",\"country\":\"China\",\"state\":\"nework\",\"zipcode\":\"43547-321\",\"contact\":\"427-106-3080\",\"url\":\"http://aol.com/vitae/nisl/aenean/lectus/pellentesque/eget.jpg?eget=habitasse&congue=platea&eget=dictumst&semper=etiam&rutrum=faucibus&nulla=cursus&nunc=urna&purus=ut&phasellus=tellus&in=nulla&felis=ut&donec=erat&semper=id&sapien=mauris&a=vulputate&libero=elementum&nam=nullam&dui=varius&proin=nulla&leo=facilisi&odio=cras&porttitor=non&id=velit&consequat=nec&in=nisi&consequat=vulputate&ut=nonummy&nulla=maecenas&sed=tincidunt&accumsan=lacus&felis=at&ut=velit&at=vivamus&dolor=vel&quis=nulla&odio=eget&consequat=eros&varius=elementum&integer=pellentesque&ac=quisque&leo=porta&pellentesque=volutpat&ultrices=erat&mattis=quisque&odio=erat&donec=eros&vitae=viverra&nisi=eget\",\"regionid\":32,\"internship_role\":\"Professor\",\"business_sector\":\"Major Pharmaceuticals\",\"business_type\":\"Research and Development\",\"company_size\":49265,\"is_verified\":true,\"is_active\":false}]";
+
+    //     let req_url = "http://localhost:3030/search";
+
+    //     let response = reqwest::Client::new()
+    //         .post(req_url)
+    //         .json(&body)
+    //         .send()
+    //         .await?;
+    //     let gist = response.text().await?;
+    //     //    let body_text=gist.to_string();
+    //     assert_eq!(data, gist);
+    //     Ok(())
+    // }
+
+    #[tokio::test]
+    async fn test_getorders() -> Result<(), Box<dyn std::error::Error>> {
+
+        let data = r#"[{"clothing_type":"Shirt","measure_breadth":"28","measure_length":"32","orderid":"YYOrd-40d37599-d451-4c6a-8f9f-503fa01b613b","payment_amount":"10000","payment_status":"paid","quantity":"18","resellerid":"Rs-da5b4042-adc9-43e5-b836-0b4121c1cbde","timestamp":"1646337578.4699323"},{"clothing_type":"Shirt","measure_breadth":"28","measure_length":"32","orderid":"Ord-40d37599-d451-4c6a-8f9f-503fa01b613b","payment_amount":"10000","payment_status":"paid","quantity":"18","resellerid":"Rs-da5b4042-adc9-43e5-b836-0b4121c1cbde","timestamp":"1646337578.4699323"},{"clothing_type":"Shirt","measure_breadth":"28","measure_length":"32","orderid":"LLOrd-40d37599-d451-4c6a-8f9f-503fa01b613b","payment_amount":"10000","payment_status":"paid","quantity":"18","resellerid":"Rs-da5b4042-adc9-43e5-b836-0b4121c1cbde","timestamp":"1646337578.4699323"},{"clothing_type":"Shirt","measure_breadth":"28","measure_length":"32","orderid":"LplOrd-40d37599-d451-4c6a-8f9f-503fa01b613b","payment_amount":"10000","payment_status":"paid","quantity":"18","resellerid":"Rs-da5b4042-adc9-43e5-b836-0b4121c1cbde","timestamp":"1646337578.4699323"},{"clothing_type":"Shirt","measure_breadth":"28","measure_length":"32","orderid":"LoplsalOrd-40d37599-d451-4c6a-8f9f-503fa01b613b","payment_amount":"10000","payment_status":"paid","quantity":"18","resellerid":"Rs-da5b4042-adc9-43e5-b836-0b4121c1cbde","timestamp":"1646337578.4699323"},{"clothing_type":"Shirt","measure_breadth":"28","measure_length":"32","orderid":"NormalOrd-40d37599-d451-4c6a-8f9f-503fa01b613b","payment_amount":"10000","payment_status":"paid","quantity":"18","resellerid":"Rs-da5b4042-adc9-43e5-b836-0b4121c1cbde","timestamp":"1646337578.4699323"}]"#;
+
+        let req_url = "http://localhost:8080/getorders";
+
+        let response = reqwest::Client::new()
+            .get(req_url)
+            .send()
+            .await?;
+        let gist = response.text().await?;
+        //    let body_text=gist.to_string();
+        assert_eq!(data, gist);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_placeorder_success() -> Result<(), Box<dyn std::error::Error>> {
+        
+        let body = json!({
+            "orderid": "NormalOrd-40d37599-d451-4c6a-8f9f-503fa01b613b",
+            "resellerid": "Rs-da5b4042-adc9-43e5-b836-0b4121c1cbde",
+            "payment_status": "paid",
+            "payment_amount": "10000",
+            "details": {    
+                "clothingtype": "Shirt",
+                "quantity": "18",
+                "measurement": 
+                    {
+                        "length": 32,
+                        "breadth": 28
+                    }
+                                
+            },
+            "timestamp": "1646337578.4699323"
+        });
+
+        let data="Order place order successfully";
+
+        let req_url = "http://localhost:8080/placeorder";
+
+        let response = reqwest::Client::new()
+            .post(req_url)
+            .json(&body)
+            .send()
+            .await?;
+        let gist = response.text().await?;
+        //    let body_text=gist.to_string();
+        assert_eq!(data, gist);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_empty_body() -> Result<(), Box<dyn std::error::Error>> {
+        let body = json!({});
+
+        let data = "Json deserialize error: missing field `orderid` at line 1 column 2";
+
+        let req_url = "http://localhost:8080/placeorder";
+
+        let response = reqwest::Client::new()
+            .post(req_url)
+            .json(&body)
+            .send()
+            .await?;
+
+        let gist = response.text().await?;
+        //    let body_text=gist.to_string();
+        assert_eq!(data, gist);
+        Ok(())
     }
 }
